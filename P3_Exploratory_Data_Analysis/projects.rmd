@@ -1,0 +1,62 @@
+---
+title: "projects"
+author: "farmerhoo"
+date: "2019/9/22"
+output: html_document
+---
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# 加载你最终使用的所有组件
+library(ggplot2)
+library(gridExtra)
+```
+
+此报告是关于红酒质量的和相关因素的探索性数据分析，用于分析的红酒数据包含1599份红酒数据，有12个红酒相关的特征（其中包含红酒的质量评价分数）
+
+```{r echo=FALSE, Load_the_Data}
+# 加载数据
+redwine <- read.csv("wineQualityReds.csv")
+redwine <- redwine[, -1]
+```
+
+# 单变量绘图选择
+```{r echo=FALSE, Univariate_Plots}
+dim(redwine)
+```
+
+```{r echo=FALSE}
+str(redwine)
+```
+
+```{r echo=FALSE}
+summary(redwine)
+```
+
+可以看出，红酒数据包含1599个观察，每个观察有12个特征，每个特征的意义如下：
+1 - fixed acidity:
+固定酸，大多数与葡萄酒有关的酸或固定的或不挥发的酸(不易挥发) 
+2 - volatile acidity:
+醋酸，葡萄酒中醋酸的含量，过高会导致令人不愉快的醋味 
+3 - citric acid:
+柠檬酸，少量的柠檬酸可以给葡萄酒增添“新鲜”和风味
+4 - residual sugar:
+残余糖，发酵结束后剩余的糖的量，很少有1克/升以下的葡萄酒，45克/升以上的葡萄酒被认为是甜的
+5 - chlorides: 
+氯化物，葡萄酒中盐的含量 
+6 - free sulfur dioxide: 游离二氧化硫，SO2的自由形态存在于SO2分子(溶解气体)与亚硫酸氢盐离子之间的平衡状态;它可以防止微生物的生长和葡萄酒的氧化 
+7 - total sulfur dioxide:  二氧化硫总量，游离和结合态S02的量;在低浓度下，SO2在葡萄酒中几乎检测不到，但当游离SO2浓度超过50ppm时，SO2在葡萄酒的鼻子和味道中变得明显 
+8 - density: 
+密度:水的密度接近于水的密度，这取决于酒精和糖的含量 
+9 - pH:
+酸碱度，描述葡萄酒的酸度或碱性，范围从0(非常酸性)到14(非常碱性);大多数葡萄酒的pH值在3-4之间 
+10 - sulphates: 
+硫酸盐，一种葡萄酒添加剂，可提高二氧化硫(S02)水平，具有抗菌和抗氧化作用 11 - alcohol: 
+酒精:葡萄酒中酒精含量的百分比 
+12 - quality：
+质量评分，评分范围0-10分
+
+```{r echo=FALSE}
+ggplot(data = redwine, aes(x = quality)) + 
+  geom_histogram(binwidth = 1) + 
+  scale_x_continuous(breaks = seq(3, 8, 1))
+```

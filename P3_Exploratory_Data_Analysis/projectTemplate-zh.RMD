@@ -1,0 +1,1006 @@
+Red Wine Exploration by QuanHu
+========================================================
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# 加载你最终使用的所有组件
+library(ggplot2)
+library(gridExtra)
+library(GGally)
+library(scales)
+library(memisc)
+```
+
+此报告是关于红酒质量的和相关因素的探索性数据分析，用于分析的红酒数据包含1599份红酒数据，有12个红酒相关的特征（其中包含红酒的质量评价分数）
+
+```{r echo=FALSE, Load_the_Data}
+# 加载数据
+redwine <- read.csv("wineQualityReds.csv")
+# 删除index列
+var_del <- names(redwine) %in% c("X")
+redwine <- redwine[!var_del]
+```
+
+# 单变量绘图选择
+```{r echo=FALSE, Univariate_Plots}
+# 查看红酒数据集的大小
+dim(redwine)
+```
+
+```{r echo=FALSE, Univariate_Plots1}
+# 查看数据集的各列描述
+str(redwine)
+```
+
+```{r echo=FALSE, Univariate_Plots2}
+# 查看各列数据的描述统计数据
+summary(redwine)
+```
+
+可以看出，红酒数据包含1599个观察，每个观察有12个特征，每个特征的意义如下：
+
+1. fixed acidity:
+固定酸，大多数与葡萄酒有关的酸或固定的或不挥发的酸(不易挥发) 
+
+2. volatile acidity:
+醋酸，葡萄酒中醋酸的含量，过高会导致令人不愉快的醋味
+
+3. citric acid:
+柠檬酸，少量的柠檬酸可以给葡萄酒增添“新鲜”和风味
+
+4. residual sugar:
+残余糖，发酵结束后剩余的糖的量，很少有1克/升以下的葡萄酒，45克/升以上的葡萄酒被认为是甜的
+
+5. chlorides: 
+氯化物，葡萄酒中盐的含量 
+
+6. free sulfur dioxide: 游离二氧化硫，SO2的自由形态存在于SO2分子(溶解气体)与亚硫酸氢盐离子之间的平衡状态;它可以防止微生物的生长和葡萄酒的氧化 
+
+7. total sulfur dioxide:  二氧化硫总量，游离和结合态S02的量;在低浓度下，SO2在葡萄酒中几乎检测不到，但当游离SO2浓度超过50ppm时，SO2在葡萄酒的鼻子和味道中变得明显 
+
+8. density: 
+密度:水的密度接近于水的密度，这取决于酒精和糖的含量 
+
+9. pH:
+酸碱度，描述葡萄酒的酸度或碱性，范围从0(非常酸性)到14(非常碱性);大多数葡萄酒的pH值在3-4之间 
+
+10. sulphates: 
+硫酸盐，一种葡萄酒添加剂，可提高二氧化硫(S02)水平，具有抗菌和抗氧化作用
+
+11. alcohol: 
+酒精:葡萄酒中酒精含量的百分比 
+
+12. quality：
+质量评分，评分范围0-10分
+
+```{r echo=FALSE, Univariate_Plots3}
+# 绘制质量评分直方图
+ggplot(data = redwine, aes(x = quality)) + 
+  # 直方图
+  geom_histogram(binwidth = 1) + 
+  # 设置x轴分割线
+  scale_x_continuous(breaks = seq(3, 8, 1))
+```
+
+质量评分的直方图可以看出质量评分符合正态分布的特征，5-6分之间评分的红酒占比最高，更低分和更高分的红酒比例逐渐减少。
+
+```{r echo=FALSE, Univariate_Plots4}
+# 查看质量评分的描述统计数据
+summary(redwine$quality)
+```
+
+可以看出，红酒的质量评分主要在5分和6分，没有低于3分和高于8分的红酒。接下来观察其他特征的分布情况。
+
+```{r echo=FALSE, Univariate_Plots5}
+# 查看固定酸的分布直方图
+ggplot(data = redwine, aes(x = fixed.acidity)) + 
+  geom_histogram(binwidth = 0.1) + 
+  scale_x_continuous(breaks = seq(4, 16, 1)) + 
+  # 设置x轴标注
+  labs(x = "fixed acidity (g / dm^3)")
+```
+
+7~8之间的固定酸含量的红酒数量最多，低于7和高于8的固定酸含量的红酒数量逐渐减少。
+
+```{r echo=FALSE, Univariate_Plots6}
+# 查看固定酸的描述统计数据
+summary(redwine$fixed.acidity)
+```
+
+固定酸最小的是4.6，最大的是15.9，其均值超过中位数，说明存在少部分红酒的固定酸含量很高的红酒，拉高了均值，但由于这部分红酒数量少而对中位数影响不大。
+
+```{r echo=FALSE, Univariate_Plots7}
+# 查看固定酸的取值及对应取值的数量，并降序排序
+sort(table(redwine$fixed.acidity), decreasing = T)
+```
+
+固定酸最小的是4.6，最大的是15.9，固定酸主要分布在7.2附近。接下来观察醋酸浓度的分布情况。
+
+```{r echo=FALSE, Univariate_Plots8}
+# 查看醋酸的分布直方图
+ggplot(data = redwine, aes(x = volatile.acidity)) + 
+  geom_histogram(binwidth = 0.01) +
+  scale_x_continuous(breaks = seq(0.1, 1.6, 0.1)) + 
+  labs(x = "volatile acidity (g / dm^3)")
+```
+
+醋酸分布呈现不太明显的双峰特性，有0.4附近和0.6附近两个峰，同时存在少部分醋酸含量超高的红酒。
+
+```{r echo=FALSE, Univariate_Plots9}
+# 查看醋酸的描述统计数据
+summary(redwine$volatile.acidity)
+```
+
+醋酸最大值在1.58，最小值在0.12，最大值和最小值之间差值较大，均值和中位数很接近。
+
+```{r echo=FALSE, Univariate_Plots12}
+# 调整binwidth宽度后查看柠檬酸分布直方图
+ggplot(data = redwine, aes(x = citric.acid)) + 
+  geom_histogram(binwidth = 0.01) + 
+  scale_x_continuous(breaks = seq(0, 1, 0.05)) + 
+  labs(x = "citric acid (g / dm^3)")
+```
+
+柠檬酸的分布来看好像比较均匀，但是存在几个明显的峰分别在0、0.24、0.49附近，其中0附近的峰值最高，说明很多红酒不含有柠檬酸。
+
+```{r echo=FALSE, Univariate_Plots13}
+# 查看柠檬酸的描述统计结果
+summary(redwine$citric.acid)
+```
+
+柠檬酸含量分布在0~1之间，均值和中位数很接近。
+
+```{r echo=FALSE, Univariate_Plots14}
+# 对柠檬酸的取值进行计数，并对计数结果进行降序排列显示
+sort(table(redwine$citric.acid), decreasing = T)
+```
+
+可以看出，红酒数据中柠檬酸为零的红酒数量最多，其次是0.49的柠檬酸浓度，大体上看随着柠檬酸浓度增大，红酒的数量减少。接下来查看剩余糖含量的分布情况。
+
+```{r echo=FALSE, Univariate_Plots15}
+# 残余糖的分布直方图
+ggplot(data = redwine, aes(x = residual.sugar)) + 
+  geom_histogram(binwidth = 0.1) + 
+  scale_x_continuous(breaks = seq(0, 16, 1)) + 
+  labs(x = "residual sugar (g / dm^3)")
+```
+
+残余糖的分布直方图有一个较长的拖尾，存在少部分残余糖超高的红酒，这会拉高残余糖的均值，峰值在2附近。
+
+```{r echo=FALSE, Univariate_Plots17}
+# 残余糖的描述统计结果
+summary(redwine$residual.sugar)
+```
+
+残余糖的取值在0.9~15.5之间，均值比中位数高，说明残余糖有一个在较大值的拖尾。
+
+```{r echo=FALSE, Univariate_Plots16}
+# 对残余糖的取值进行计数，并对计数结果进行降序排列显示
+sort(table(redwine$residual.sugar), decreasing = T)
+```
+
+
+红酒的残余糖含量主要分布在2附近,但也有部分残余糖超高的红酒，这部分红酒可能是发酵状况不好的红酒。
+
+```{r echo=FALSE, Univariate_Plots18}
+# 氯化物的分布直方图
+ggplot(data = redwine, aes(x = chlorides)) + 
+  geom_histogram(binwidth = 0.005) + 
+  scale_x_continuous(breaks = seq(0, 0.65, 0.05)) + 
+  labs(x = "chlorides (g / dm^3)")
+```
+
+可以看出，氯化物主要集中在0.75附近分布，和剩余糖的分布类似，存在部分值超高的氯化物含量的红酒。接下来查看二氧化硫含量的直方图。
+
+```{r echo=FALSE, Univariate_Plots19}
+# 游离二氧化硫分布直方图
+p1 <- ggplot(data = redwine, aes(x = free.sulfur.dioxide)) + 
+  geom_histogram(binwidth = 1) + 
+  labs(x = "free sulfur dioxide (mg / dm^3)")
+# 总二氧化硫分布直方图
+p2 <- ggplot(data = redwine, aes(x = total.sulfur.dioxide)) + 
+  geom_histogram(binwidth = 4) + 
+  labs(x = "total sulfur dioxide (mg / dm^3)")
+# 两张图绘制在同一个画板
+grid.arrange(p1, p2)
+```
+
+可以看出，游离态和总二氧化硫含量几乎不在一个数量级，总二氧化硫含量要高很多。由总二氧化硫和游离二氧化硫含量可以得到固定二氧化硫含量，接下来查看总二氧化硫和游离二氧化硫含量之差得到的固定二氧化硫含量。
+
+```{r echo=FALSE, Univariate_Plots20}
+# 创建固定二氧化硫特征
+redwine$fixed.sulfur.dioxide <- redwine$total.sulfur.dioxide - redwine$free.sulfur.dioxide
+# 绘制固定二氧化硫的分布直方图
+ggplot(data = redwine, aes(x = fixed.sulfur.dioxide)) + 
+  geom_histogram(binwidth = 4) + 
+  labs(x = "fixed sulfur dioxide (mg / dm^3)")
+```
+
+可以看出，固定二氧化硫含量的分布和总二氧化硫含量分布很类似。接下来查看红酒密度的分布情况。
+
+```{r echo=FALSE, Univariate_Plots21}
+# 红酒密度分布直方图
+ggplot(data = redwine, aes(x = density)) + 
+  geom_histogram(binwidth = 0.0001) + 
+  labs(x = "density (g / cm^3)")
+```
+
+可以看出，密度大多数分布在1以下，符合预期，毕竟酒精的密度小于1，而水的密度等于1，但是大于1的密度有点奇怪，可能酒中含有杂质等不纯净的成分？
+
+```{r echo=FALSE, Univariate_Plots22}
+# 红酒密度的描述统计结果
+summary(redwine$density)
+```
+
+红酒密度范围为0.99~1.004之间，存在少部分密度大于1的红酒，密度大于1是否会对红酒口感造成很大影响，接下来对密度大于1和小于1的红酒分别查看质量评分的分布。
+
+```{r echo=FALSE}
+# 查看密度大于1的红酒的质量评分的分布
+ggplot(data = subset(redwine, density>=1), aes(x = quality)) + 
+  geom_histogram(binwidth = 1) + 
+  scale_x_continuous(breaks = seq(3, 8, 1)) + 
+  # 设置标题
+  ggtitle('Quality Distribution for Redwine With Density>=1')
+```
+
+```{r echo=FALSE}
+# 查看密度小于1的红酒的质量评分的分布
+ggplot(data = subset(redwine, density<1), aes(x = quality)) + 
+  geom_histogram(binwidth = 1) + 
+  scale_x_continuous(breaks = seq(3, 8, 1)) + 
+  # 设置标题
+  ggtitle('Quality Distribution for Redwine With Density<1')
+```
+
+从分布来看，密度大于1并没有特别影响红酒的口感，因为两种分布很类似。接下来查看酸碱度的分布。
+
+```{r echo=FALSE, Univariate_Plots23}
+# 红酒pH值的分布直方图
+ggplot(data = redwine, aes(x = pH)) + 
+  geom_histogram(binwidth = 0.01) + 
+  scale_x_continuous(breaks = seq(2.4, 5, 0.1))
+```
+
+红酒pH值的分布直方图看出，pH在3.3附近的红酒数量最多，总体上看红酒都是呈酸性的。
+
+```{r echo=FALSE, Univariate_Plots24}
+# pH值的描述统计结果
+summary(redwine$pH)
+```
+
+可以看出红酒的pH值范围在2.7~4.1之间，均值和中位数很接近，说明分布没有拖尾线性，接下来查看硫酸盐的含量。
+
+```{r echo=FALSE, Univariate_Plots25}
+# 硫酸盐的分布直方图
+ggplot(data = redwine, aes(x = sulphates)) + 
+  geom_histogram(binwidth = 0.01) + 
+  scale_x_continuous(breaks = seq(0, 2.0, 0.1)) + 
+  labs(x = "sulphates (g / dm3)")
+```
+
+可以看出，硫酸盐浓度大多数都在0.4-1.0之间，也有部分硫酸盐含量很高的红酒，达到了2.0。接下来查看酒精浓度的分布情况。
+
+```{r echo=FALSE, Univariate_Plots26}
+# 酒精的分布直方图
+ggplot(data = redwine, aes(x = alcohol)) + 
+  geom_histogram(binwidth = 0.1) +
+  scale_x_continuous(breaks = seq(8, 15, 0.5)) + 
+  labs(x = "alcohol (% by volume)")
+```
+
+酒精含量并不接近整体分布，9.5左右酒精浓度的红酒最多，超过9.5酒精浓度的红酒数量在逐步减少。
+
+```{r echo=FALSE, Univariate_Plots27}
+# 酒精的描述统计结果
+summary(redwine$alcohol)
+```
+
+红酒的酒精浓度范围在8~15之间。
+
+# 单变量分析
+
+### 你的数据集结构是什么？
+
+数据集有1599个红酒的观察数据，有12个关于红酒的特征，这些特征分别为：固定酸、醋酸、柠檬酸、残余糖、氯化物、游离二氧化硫、二氧化硫总量、密度、pH值、硫酸盐、酒精浓度、质量评分。
+
+质量评分为0-10分的评分，大多数红酒的评分为5分或6分，评分的均值和中位数也都在6分左右。
+酒精浓度大多都在9-12度之间，符合我们经常买到的红酒的度数。但是最高度数也有到14.9度的。
+红酒密度大多数都小于1，符合酒精和水的混合物的密度，但出现少部分密度大于1的红酒，怀疑是否有较多杂质混入红酒导致密度升高？
+柠檬酸可以给红酒增添“新鲜”和风味，猜测柠檬酸的含量高低和红酒质量评分有较大的关系。
+
+### 你的数据集内感兴趣的主要特性有哪些？
+
+感兴趣的主要特性是红酒的质量评分，需要重点分析红酒的质量评分是否可以通过某个或某些特征进行很好的预测，猜测可能柠檬酸含量和红酒的质量评分有比较强的关系。
+
+### 你认为数据集内哪些其他特征可以帮助你探索兴趣特点？
+
+柠檬酸、醋酸、残余糖、游离二氧化硫、pH值、酒精度等特征会帮助探索质量评分。
+
+### 根据数据集内已有变量，你是否创建了任何新变量？
+
+创建了固定二氧化硫含量，固定二氧化硫含量由总二氧化硫含量减去游离态二氧化硫含量得到。
+
+### 在已经探究的特性中，是否存在任何异常分布？你是否对数据进行一些操作，如清洁、调整或改变数据的形式？如果是，你为什么会这样做？
+
+红酒的密度存在少部分大于1的情况，而红酒的主要成分是水和酒精，水的密度大约是1，酒精的密度大约是0.79，有点违反常识。但我们暂时没有对密度大于1的数据进行任何清洗操作，以免将数据错误地删除而影响分析结论，只是在后续的分析时，注意密度条件的影响。
+
+
+# 双变量绘图选择
+```{r echo=FALSE, Bivariate_Plots}
+# 相关系数矩阵
+cor(redwine)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.height=16, fig.width=12}
+set.seed(20022012)
+ggpairs(redwine,
+  upper = list(continuous = "cor", combo = "box_no_facet"), 
+  lower = list(continuous = wrap("points", alpha = 0.3, size = 0.1), 
+               combo = wrap("dot", alpha = 0.4, size = 0.2)))
+```
+
+通过上述相关系数矩阵，可以看到各个特征间的相关关系，比如各种酸的含量和酸碱度之间相关系数较大，各种形式的二氧化硫之间的相关系数较大。而红酒质量评分和醋酸、固定二氧化硫浓度相关度叫明显，且呈负相关，红酒质量评分和酒精浓度、硫酸盐含量、柠檬酸相关系数较大，且呈正相关。
+
+```{r echo=FALSE}
+# 绘制红酒酒精浓度和质量评分散点图
+ggplot(data = redwine, aes(x = quality, y = alcohol)) + 
+  # 散点图
+  geom_point(alpha = 0.2, position = position_jitter(), color = 'orange') + 
+  # 均值折线图
+  geom_line(stat = 'summary', fun.y = mean) + 
+  # 10%分位数折线图
+  geom_line(stat = 'summary', fun.y = quantile, 
+            fun.args = list(probs = 0.1), 
+            linetype = 2, color = 'blue') + 
+  # 90%分位数折线图
+  geom_line(stat = 'summary', fun.y = quantile, 
+            fun.args = list(probs = 0.9), 
+            linetype = 3, color = 'red') + 
+  # 设置y轴标注、图形标题
+  labs(y = "alcohol (% by volume)", title = "scatter plot of alcohol VS quality")
+```
+
+由于质量评分是几个离散值，虽然质量评分和酒精浓度的相关系数比较高，但是散点图并不能看出明显的线性关系，但是计算评分对应酒精浓度的均值、10%分位数、90%分位数可以看出酒精浓度越高的红酒得高评分得可能性越高。
+
+```{r echo=FALSE, Multivariate_Plots}
+# 将取值分散的quality转变为factor变量
+redwine$quality_factor <- factor(redwine$quality)
+# 不同的quality绘制密度图
+ggplot(data = redwine, aes(x = alcohol)) + 
+  # 密度图
+  geom_density(aes(color = quality_factor)) + 
+  # 颜色编码
+  scale_color_brewer(type = 'div',
+                     palette = 'PuOr', 
+                     guide = guide_legend(title = 'quality', 
+                                          reverse = F,
+                                          override.aes = list(alpha = 1, size = 1))) + 
+  # 黑暗主题
+  theme_dark() +
+  # x轴标注
+  labs(x = "alcohol (% by volume)")
+```
+
+上图是酒精浓度的密度图，上图来看评分高的红酒，确实分布在更高的酒精浓度区域，评分低的红酒期酒精浓度也比较低。从图中看出，如果酒精浓度低于10%，可以大胆猜测红酒质量评分低于6。
+
+```{r echo=FALSE}
+# 酒精浓度箱线图
+ggplot(data = redwine, aes(x = quality, y = alcohol)) + 
+  # 箱线图
+  geom_boxplot(aes(group = cut_width(quality, 1))) + 
+  # x轴刻度设置
+  scale_x_continuous(breaks = seq(3, 8, 1)) + 
+  # x轴标注
+  labs(y = "alcohol (% by volume)")
+```
+
+上图是酒精浓度在不同质量评分下的箱线图，可以看出质量评分高于5分的情况下，酒精浓度的均值与质量评分有很强的相关关系，酒精浓度越高有更高的质量评分。
+
+```{r echo=FALSE}
+# 按红酒质量评分分类的酒精浓度的描述统计结果
+by(redwine$alcohol, redwine$quality, summary)
+```
+
+通过在不同的质量评分下，查看酒精浓度的描述性统计数据，可以得出和箱线图类似的结论，在质量评分高于5分的情况下，酒精浓度的均值与质量评分有很强的相关关系，酒精浓度越高有更高的质量评分。
+
+```{r echo=FALSE}
+# 创建酒精浓度和质量评分的线性模型
+m1 <- lm(formula = quality ~ alcohol, data = redwine)
+# 线性模型
+mtable(m1)
+```
+
+质量评分和酒精浓度的相关程度还不足以建立简单的线性模型来实现酒精浓度到质量评分的预测，可以看到它们建立的线性模型决定系数仅为0.227.
+
+```{r echo=FALSE}
+# 醋酸和评分的散点图
+ggplot(data = redwine, aes(x = quality, y = volatile.acidity)) + 
+  geom_point(alpha = 0.5, position = position_jitter(), color = I('#F4A460')) + 
+  geom_line(stat = 'summary', fun.y = mean) + 
+  geom_line(stat = 'summary', fun.y = quantile, 
+            fun.args = list(probs = 0.1), 
+            linetype = 2, color = 'blue') + 
+  geom_line(stat = 'summary', fun.y = quantile, 
+            fun.args = list(probs = 0.9), 
+            linetype = 3, color = 'red') + 
+  labs(y = "volatile acidity (g / dm^3)")
+```
+
+由于质量评分是几个离散值，虽然质量评分和醋酸浓度的相关系数比较高，但是散点图并不能看出明显的线性关系。通过计算评分对应醋酸含量的均值、10%分位数、90%分位数绘制折线图，可以看出红酒得评分与对应评分得红酒得醋酸浓度均值有一定得负相关关系。
+
+```{r echo=FALSE}
+# 密度图
+ggplot(data = redwine, aes(x = volatile.acidity)) + 
+  geom_density(aes(color = quality_factor)) + 
+  scale_color_brewer(type = 'div',
+                     palette = "PuOr", 
+                     guide = guide_legend(title = 'quality', 
+                                          reverse = F,
+                                          override.aes = list(alpha = 1, size = 1))) + 
+  theme_dark() + 
+  labs(x = "volatile acidity (g / dm^3)")
+```
+
+上图是醋酸含量的密度图，上图来看评分高的红酒其密度图的峰更低，而评分低的红酒的密度图的峰位于更高的醋酸含量处，可以看出红酒评分与醋酸存在负相关关系。
+
+```{r echo=FALSE}
+# 醋酸浓度箱线图
+ggplot(data = redwine, aes(x = quality, y = volatile.acidity)) + 
+  geom_boxplot(aes(group = cut_width(quality, 1))) + 
+  scale_x_continuous(breaks = seq(3, 8, 1)) + 
+  labs(y = "volatile acidity (g / dm^3)")
+```
+
+上图是醋酸含量在不同质量评分下的箱线图，可以看出质量评分低于7分的情况下，醋酸含量的均值与质量评分有很强的相关关系，评分高得红酒有更低得醋酸含量均值。
+
+```{r echo=FALSE}
+# 按红酒质量评分分类的醋酸浓度的描述统计结果
+by(redwine$volatile.acidity, redwine$quality, summary)
+```
+
+通过在不同的质量评分下，查看醋酸含量的描述性统计数据，可以得出和箱线图类似的结论，在质量评分低于7分的情况下，醋酸含量的均值与质量评分有很强的负相关关系，醋酸含量越高有更高的可能性获得低分。
+
+```{r echo=FALSE}
+# 醋酸与质量评分的线性模型
+m2 <- lm(formula = quality ~ volatile.acidity, data = redwine)
+mtable(m2)
+```
+
+质量评分和醋酸浓度的相关程度还不足以建立简单的线性模型来实现醋酸浓度到质量评分的预测，可以看到它们建立的线性模型决定系数仅为0.153.
+
+```{r echo=FALSE}
+# 质量评分和柠檬酸的散点图
+ggplot(data = redwine, aes(x = quality, y = citric.acid)) + 
+  geom_point(alpha = 0.3, position = position_jitter(), color = '#33A1C9') + 
+  geom_line(stat = 'summary', fun.y = mean) + 
+  geom_line(stat = 'summary', fun.y = quantile, 
+            fun.args = list(probs = 0.1), 
+            linetype = 2, color = 'blue') + 
+  geom_line(stat = 'summary', fun.y = quantile, 
+            fun.args = list(probs = 0.9), 
+            linetype = 3, color = 'red') + 
+  labs(y = "citric acid (g / dm^3)")
+```
+
+由于质量评分是几个离散值，所以通过散点图并不能看出明显的线性关系。通过计算评分对应柠檬酸含量的均值、10%分位数、90%分位数绘制折线图，可以看出柠檬酸含量的均值越高的红酒的评分相对越高,但是差距不是特别明显，说明柠檬酸对区分红酒品质口感等不明显，但也有一定得正相关关系。
+
+```{r echo=FALSE}
+# 密度图
+ggplot(data = redwine, aes(x = citric.acid)) + 
+  geom_density(aes(color = quality_factor)) + 
+  scale_color_brewer(type = 'div',
+                     palette = "PuOr", 
+                     guide = guide_legend(title = 'quality', 
+                                          reverse = F,
+                                          override.aes = list(alpha = 1, size = 1))) + 
+  theme_dark() + 
+  labs(x = "citric.acid (g / dm^3)")
+```
+
+上图是柠檬酸含量的密度图，上图来看评分高的红酒其密度图的峰更高，而评分低的红酒的密度图的峰位于更低的醋酸含量处，可以看出红酒评分与醋酸存在不太明显的正相关关系。
+
+```{r echo=FALSE}
+# 柠檬酸箱线图
+ggplot(data = redwine, aes(x = quality, y = citric.acid)) + 
+  geom_boxplot(aes(group = cut_width(quality, 1))) + 
+  scale_x_continuous(breaks = seq(3, 8, 1)) + 
+  labs(y = "citric acid (g / dm^3)")
+```
+
+上图是醋酸含量在不同质量评分下的箱线图，箱线图也印证了上述散点图的观点，柠檬酸含量对红酒口感有一定的正向影响，即柠檬酸含量越高越容易有好的口感，但影响不是特别明显。
+
+```{r echo=FALSE}
+# # 按红酒质量评分分类的柠檬酸的描述统计结果
+by(redwine$citric.acid, redwine$quality, summary)
+```
+
+通过在不同的质量评分下，查看柠檬酸含量的描述性统计数据，可以得出和以上三个图形相似的结论，柠檬酸含量对红酒口感有一定的正向影响，即柠檬酸含量越高越容易有好的口感，但影响不是特别明显。
+
+```{r echo=FALSE}
+# 质量评分与硫酸盐的散点图
+ggplot(data = redwine, aes(x = quality, y = sulphates)) + 
+  geom_point(alpha = 0.2, position = position_jitter(), color = '#308014') + 
+  geom_line(stat = 'summary', fun.y = mean) + 
+  geom_line(stat = 'summary', fun.y = quantile, 
+            fun.args = list(probs = 0.1), 
+            linetype = 2, color = 'blue') + 
+  geom_line(stat = 'summary', fun.y = quantile, 
+            fun.args = list(probs = 0.9), 
+            linetype = 3, color = 'red') + 
+  labs(y = "sulphates (g / dm3)")
+```
+
+由于质量评分是几个离散值，所以通过散点图并不能看出明显的线性关系。通过计算不同评分对应硫酸盐含量的均值、10%分位数、90%分位数绘制折线图，可以看出硫酸盐含量的均值越高的红酒的评分相对越高,但是差距不是特别明显，说明硫酸盐对区分红酒品质口感得影响很微弱。
+
+```{r echo=FALSE}
+# 密度图
+ggplot(data = redwine, aes(x = sulphates)) + 
+  geom_density(aes(color = quality_factor)) + 
+  scale_color_brewer(type = 'div',
+                     palette = "PuOr", 
+                     guide = guide_legend(title = 'quality', 
+                                          reverse = F,
+                                          override.aes = list(alpha = 1, size = 1))) + 
+  theme_dark() + 
+  labs(x = "sulphates (g / dm^3)")
+```
+
+上图是硫酸盐含量的密度图，从密度图也可以看出不同评分的密度图的峰值非常接近，也就是说硫酸盐对评分的区分度不明显。
+
+```{r echo=FALSE}
+# 硫酸盐的箱线图
+ggplot(data = redwine, aes(x = quality, y = sulphates)) + 
+  geom_boxplot(aes(group = cut_width(quality, 1))) + 
+  scale_x_continuous(breaks = seq(3, 8, 1)) + 
+  labs(y = "sulphates (g / dm3)")
+```
+
+上图是硫酸盐含量在不同质量评分下的箱线图，箱线图也印证了上述散点图的观点，柠檬酸含量对红酒口感有一定的正向影响，但影响已经特别不明显，因为不同评分的箱线图的中位数已经非常接近，区分度不明显。
+
+```{r echo=FALSE}
+# # 按红酒质量评分分类的硫酸盐的描述统计结果
+by(redwine$sulphates, redwine$quality, summary)
+```
+
+通过在不同的质量评分下，查看硫酸盐含量的描述性统计数据，可以得出和以上三个图形相似的结论，硫酸盐含量对红酒口感有一定的正向影响，即硫酸盐含量越高越容易有好的口感，但影响很微弱。
+
+```{r echo=FALSE}
+# 固定酸浓度与质量评分散点图
+ggplot(data = redwine, aes(y = fixed.sulfur.dioxide, x = quality)) + 
+  geom_point(alpha = 0.1, position = position_jitter()) + 
+  geom_line(stat = 'summary', fun.y = mean) + 
+  geom_line(stat = 'summary', fun.y = quantile, 
+            fun.args = list(probs = 0.1), 
+            linetype = 2, color = 'blue') + 
+  geom_line(stat = 'summary', fun.y = quantile, 
+            fun.args = list(probs = 0.9), 
+            linetype = 3, color = 'red') + 
+  labs(y = "fixed sulfur dioxide (mg / dm^3)")
+```
+
+固定二氧化硫浓度与质量评分的相关系数虽然有0.2，但是从散点图已经看不出相关关系了，不能通过固定二氧化硫浓度得出质量评分的范围。
+
+```{r echo=FALSE}
+# 固定酸浓度箱线图
+ggplot(data = redwine, aes(x = quality, y = fixed.sulfur.dioxide)) + 
+  geom_boxplot(aes(group = cut_width(quality, 1))) + 
+  scale_x_continuous(breaks = seq(3, 8, 1))
+```
+
+箱线图的中位数也得出了同样的结论，不同质量评分的固定二氧化硫浓度并不能反映固定二氧化硫浓度和质量评分的关系。继续查看其他特征和质量评分的关系可能已经没有太大意义，因为其他特征与质量评分的相关系数已经小于0.2，而且相关系数相对较高得固定二氧化硫浓度的散点图、箱线图已经观察不到和质量评分的线性关系。
+
+从以上分析可以看出，酒精、醋酸、柠檬酸、硫酸盐可以通过散点图、箱线图、密度图等观察到这些特征与质量评分的线性关系。而固定二氧化硫与质量评分的相关系数刚好在上述4个特征之下，其散点图和箱线图与质量评分已经观察不出明显的线性关系，那么剩余的特征应该也更加观察不出和质量评分的线性关系。
+
+接下来将上述4个与质量评分相关关系较好的特征，进行组合来绘制密度图、散点图、箱线图等查看它们是否能对质量评分有更好的区分度。
+
+```{r echo=FALSE}
+# 酒精/醋酸密度图
+ggplot(data = redwine, aes(x = alcohol/volatile.acidity)) + 
+  geom_density(aes(color = quality_factor)) + 
+  scale_color_brewer(type = 'div',
+                     palette = "PuOr", 
+                     guide = guide_legend(title = 'quality', 
+                                          reverse = F,
+                                          override.aes = list(alpha = 1, size = 1))) + 
+  theme_dark()
+```
+
+酒精/醋酸的密度图看，好像对于7、8分和3、4、5、6的区分度挺高的。
+
+```{r echo=FALSE}
+# 酒精/醋酸箱线图
+ggplot(data = redwine, aes(x = quality_factor, y = alcohol/volatile.acidity)) + 
+  geom_boxplot() + 
+  labs(x = "quality")
+```
+
+从箱线图也能看出来酒精与醋酸比值和质量评分的线性关系很好，特别是分值较低的时候，特别是3分应该具有很好的区分度。
+
+```{r echo=FALSE}
+# 酒精/醋酸在不同质量评分下的描述性统计结果
+by(redwine$alcohol/redwine$volatile.acidity, redwine$quality, summary)
+```
+
+从中位数的之来看，酒精/醋酸越大，质量评分应该越高。
+
+```{r echo=FALSE}
+# 柠檬酸/酒精密度图
+ggplot(data = redwine, aes(x = citric.acid/alcohol)) + 
+  geom_density(aes(color = quality_factor)) + 
+  scale_color_brewer(type = 'div',
+                     palette = "PuOr", 
+                     guide = guide_legend(title = 'quality', 
+                                          reverse = F,
+                                          override.aes = list(alpha = 1, size = 1))) + 
+  theme_dark()
+```
+
+柠檬酸/酒精的密度图和柠檬酸本身的密度图差不多,这两个变量的组合并没有对区分质量评分有更大的帮助。
+
+```{r echo=FALSE}
+# 酒精/pH密度图
+ggplot(data = redwine, aes(x = alcohol/pH)) + 
+  geom_density(aes(color = quality_factor)) + 
+  scale_color_brewer(type = 'div',
+                     palette = "PuOr", 
+                     guide = guide_legend(title = 'quality', 
+                                          reverse = F,
+                                          override.aes = list(alpha = 1, size = 1))) + 
+  theme_dark()
+```
+
+酒精/pH的密度图看出，其可以较好地区分3分和8分的评分，它们密度图重叠区域很少。
+
+```{r echo=FALSE}
+# 酒精/pH箱线图
+ggplot(data = redwine, aes(x = quality_factor, y = alcohol/pH)) + 
+  geom_boxplot() + 
+  labs(x = "quality")
+```
+
+上图是酒精/密度的箱线图，通过箱线图也可以看出，酒精/pH与质量评分有一定的正相关关系，但是对于3-6分的红酒区分不是特别明显，但是对最高评分和最低评分的红酒，它们的酒精/pH特征差距应该是比较大的。
+
+```{r echo=FALSE}
+# 酒精/pH在不同质量评分下的描述统计数据
+by(redwine$alcohol/redwine$pH, redwine$quality, summary)
+```
+
+从描述统计结果来看，也可以得出和箱线图相似的结论，酒精/pH与质量评分有一定的正相关关系，但是对于3-6分的红酒区分不是特别明显，但是对最高评分和最低评分的红酒，它们的酒精/pH特征差距应该是比较大的。
+
+```{r echo=FALSE}
+# 柠檬酸/氯化盐密度图
+ggplot(data = redwine, aes(x = citric.acid/chlorides)) + 
+  geom_density(aes(color = quality_factor)) + 
+  scale_color_brewer(type = 'div',
+                     palette = "PuOr", 
+                     guide = guide_legend(title = 'quality', 
+                                          reverse = F,
+                                          override.aes = list(alpha = 1, size = 1))) + 
+  theme_dark()
+```
+
+柠檬酸/氯化盐密度图看，其可以很好区分3、4分和7、8分的红酒。
+
+```{r echo=FALSE}
+ggplot(data = redwine, aes(x = quality_factor, y = citric.acid/chlorides)) + 
+  geom_boxplot() + 
+  labs(x = "quality")
+```
+
+从箱线图来看，柠檬酸/氯化盐与质量评分有一定的线性关系，但是它们很好地区分3分和4分、已经7分和8分，但是可以较好地区分出3-4分和7-8分。
+
+```{r echo=FALSE}
+by(redwine$citric.acid/redwine$chlorides, redwine$quality, summary)
+```
+
+从中位数看，好像有一定的线性关系，但是三分位数的重叠也很多，可能利用它们对评分进行区分的话效果会不明显。
+
+接下里研究密度和什么特征是相关的，以解答密度大于1的疑惑。
+
+```{r echo=FALSE}
+# 固定酸和密度的散点图
+ggplot(data = redwine, aes(x = fixed.acidity, y = density)) + 
+  geom_point(alpha = 0.2, position = position_jitter()) + 
+  labs(x = "fixed acidity (g / dm^3)", 
+       y = "density (g / cm^3)")
+```
+
+密度和固定酸含量有很强的正相关性，是否是因为固定酸含量较高使得红酒密度上升至大于1，接下来绘制密度大于1的部分红酒数据的密度和固定酸浓度的散点图。
+
+```{r echo=FALSE}
+# 密度大于1的红酒中，固定酸与密度的散点图
+ggplot(data = subset(redwine, density>1), aes(x = fixed.acidity, y = density)) + 
+  geom_point(alpha = 0.2, position = position_jitter()) + 
+  ggtitle('density vs fixed.acidity for density>1') + 
+  labs(x = "fixed acidity (g / dm^3)", 
+       y = "density (g / cm^3)")
+```
+
+可以看出密度大于1的红酒的固定酸含量大体上分布在较高的区域，因为固定酸浓度整体在4-16g/dm^3的范围，而大于1的红酒固定酸浓度在8-16g/dm^3的范围。说明密度大于1可能是因为较高的固定酸含量使红酒密度上升，是否还有其他因素影响，接下来继续分析。
+
+```{r echo=FALSE}
+# pH值与密度的散点图
+ggplot(data = redwine, aes(x = pH, y = density)) + 
+  geom_point(alpha = 0.2, position = position_jitter()) + 
+  labs(x = "citric acid (g / dm^3)", 
+       y = "density (g / cm^3)")
+```
+
+从柠檬酸和密度的散点图可以看出，柠檬酸和密度有一定的相关关系，但是相关关系并不如固定酸和密度的相关关系强烈，而且柠檬酸和密度是负相关的关系
+
+```{r echo=FALSE}
+# 酒精浓度与密度的散点图
+ggplot(data = redwine, aes(x = alcohol, y = density)) + 
+  geom_point(alpha = 0.2, position = position_jitter()) + 
+  labs(x = "alcohol (% by volume)", 
+       y = "density (g / cm^3)")
+```
+
+可以看出，酒精含量和密度是反比的关系，毕竟在红酒的成分中酒精的密度是小于1的，酒精越多会把整体密度拉得越低。
+
+```{r echo=FALSE}
+# 硫酸盐与密度的散点图
+ggplot(data = redwine, aes(x = sulphates, y = density)) + 
+  geom_point(alpha = 0.2, position = position_jitter()) + 
+  scale_x_continuous(breaks = seq(0.3, 2, 0.1))
+```
+
+硫酸盐也是红酒中密度大于水的成分，理论上其含量越高红酒的密度也会越大，但实际上硫酸盐和密度并没有太明显的线性关系。
+
+```{r echo=FALSE}
+# 硫酸盐
+ggplot(data = subset(redwine, density>1), aes(x = sulphates, y = density)) + 
+  geom_point(alpha = 0.2, position = position_jitter()) + 
+  ggtitle('density vs sulphates for density>1') + 
+  scale_x_continuous(breaks = seq(0.4, 1.2, 0.1))
+```
+
+完整数据的硫酸盐的浓度在0.3-2.0之间，而对于密度大于1的红酒其硫酸盐浓度在0.3-1.2之间，可以发现密度高的红酒并没有同时出现硫酸盐含量比较高的特性。说明高密度和硫酸盐没有明显的相关性。
+
+# 双变量分析
+
+### 探讨你在这部分探究中观察到的一些关系。这些感兴趣的特性与数据集内其他特性有什么区别？
+
+**1. 与质量评分的相关性分析**
+
+－ 评分和酒精浓度线性回归预测评分可信度为0.227，通过醋酸含量线性预测评分可信度为0.153。
+
+－ 评分和酒精浓度和固定酸含量线性关系较明显。评分质量和酒精浓度大体上正相关，但是在评分较低比较高时，线性关系变弱。评分质量和醋酸酸浓度大体上负相关，它们在评分较高时，线性关系变弱。
+
+－ 根据以上分析，酒精浓度和醋酸含量，分别在评分高和低的时候与评分的线性关系较好，猜想或许这两个变量可以很好的预测评分，所以又采用两个变量的组合分析了组合与质量评分的相关关系。
+
+- 酒精/醋酸的密度图看，对于7、8分和3、4、5、6的区分度挺高的。
+
+- 酒精/pH的密度图看出，其可以较好地区分3分和8分的评分，它们密度图重叠区域很少。
+
+**2. 与密度的相关性分析**
+
+- 密度主要和酒精浓度负相关。
+
+- 猜测大于1的红酒，可能是由于固定酸含量高引起，但从目前的分析也的不出确切的结论。
+
+
+### 你是否观察到主要特性与其他特性之间的有趣关系？
+
+- 质量评分和酒精浓度、醋酸、柠檬酸相关性较高，说明酒精浓度、醋酸、柠檬酸含量会比较明显地影响红酒的口感。
+
+- 从密度和其他变量的相关性来看，密度主要由酒精和固定酸决定，酒精含量增加会拉低红酒密度，固定酸含量增加会拉高红酒密度。
+
+### 你发现最强的关系是什么？
+
+- 固定二氧化硫含量和总二氧化硫含量的线性关系很强烈。
+
+- 固定酸含量和柠檬酸含量的线性关系也比较明显。
+
+
+# 多变量绘图选择
+
+通过前文的分析，我们知道与质量评分相关关系最好的两个特征是酒精与醋酸，那么我们以酒精与醋酸绘制散点图，并以不同颜色标注质量评分不同的点，如下：
+
+```{r echo=FALSE}
+# 醋酸/酒精和质量评分的散点图
+ggplot(data = redwine, 
+       aes(x = alcohol, y = volatile.acidity)) + 
+  geom_jitter(aes(color = quality_factor), alpha = 0.6) + 
+  # 颜色编码
+  scale_color_brewer(type = 'div', palette = "PuOr", 
+                     guide = guide_legend(title = 'quality')) + 
+  # 调暗背景便于观察
+  theme_dark() + 
+  labs(x = "alcohol (% by volume)", 
+       y = "volatile acidity (g / dm^3)")
+```
+
+好像并不能很好地区分不同的分数，但是也能看出来随着酒精浓度上升评分在逐渐升高，随着醋酸浓度上升评分在降低。我们看看这两个特征是否能区分评分的最高分和最低分。
+
+```{r echo=FALSE}
+# 醋酸/酒精和质量评分的散点图
+ggplot(data = subset(redwine, quality_factor %in% c(3, 8)), 
+       aes(x = alcohol, y = volatile.acidity)) + 
+  geom_jitter(aes(color = quality_factor), alpha = 0.6) + 
+  # 颜色编码
+  scale_color_brewer(type = 'div', palette = "PuOr", 
+                     guide = guide_legend(title = 'quality')) + 
+  # 调暗背景便于观察
+  theme_dark() + 
+  labs(x = "alcohol (% by volume)", 
+       y = "volatile acidity (g / dm^3)")
+```
+
+如果只绘制最高分和最低分，酒精浓度和醋酸含量的散点图中，可以通过一条直线将最高分和最低分区分开。
+
+```{r echo=FALSE}
+# 醋酸/酒精和质量评分的散点图
+ggplot(data = redwine, 
+       aes(x = volatile.acidity/alcohol, y = sulphates/density)) + 
+  geom_jitter(aes(color = quality_factor), alpha = 0.6) + 
+  # 颜色编码
+  scale_color_brewer(type = 'div', palette = "PuOr", 
+                     guide = guide_legend(title = 'quality')) + 
+  # 调暗背景便于观察
+  theme_dark()
+```
+
+尝试绘制一个散点图，来查看硫酸盐/密度、醋酸/酒精是否能对质量评分进行一定程度的区分，发现上述四个特征并不能很好的区分质量评分。但是能看出3-4分的点更集中在右下角，7-8分的点更集中在左上角。
+
+```{r echo=FALSE}
+# 只查看最高分和最低分的质量评分的区分情况
+ggplot(data = subset(redwine, quality_factor %in% c(3, 8)), 
+       aes(x = volatile.acidity/alcohol, y = sulphates/density)) + 
+  geom_point(aes(color = quality_factor), alpha = 0.6) + 
+  # 颜色编码
+  scale_color_brewer(type = 'div', palette = "PuOr", 
+                     guide = guide_legend(title = 'quality')) + 
+  # 调暗背景便于观察
+  theme_dark()
+```
+
+通过只绘制最高评分和最低评分的散点图，发现硫酸盐/密度、醋酸/酒精这四个特征可以很好的区分最高分和最低分，而且是两条与x轴和y轴平行的线就可以将3分和8分区分开来。
+
+```{r echo=FALSE}
+# 创建密度是否大于1的特征
+redwine$density.bigger.1 <- redwine$density > 1
+# 绘制密度是否大于1散点图
+ggplot(data = redwine, 
+       aes(x = alcohol, y = fixed.acidity)) + 
+  geom_point(aes(color = density.bigger.1)) + 
+  # 颜色编码
+  scale_color_brewer(type = 'div', palette = "PuOr", 
+                     guide = guide_legend(title = 'dnesity bigger than 1')) + 
+  # 调暗背景便于观察
+  theme_dark() + 
+  # 设置标题
+  ggtitle('scatter plot of density bigger than 1 or not') + 
+  # 设置x轴y轴标注
+  labs(x = "alcohol (% by volume)", 
+       y = "fixed acidity (g / dm^3)")
+```
+
+密度方面，通过之前分析的酒精和固定酸可以比较好的区分密度是否大于1，但是从散点图来看，区分度并不是很明显。
+
+```{r echo=FALSE}
+# 加入参与糖特征观察密度是否大于1的散点图
+ggplot(data = redwine, 
+       aes(x = alcohol/fixed.acidity, y = residual.sugar)) + 
+  geom_point(aes(color = density.bigger.1)) + 
+  # 颜色编码
+  scale_color_brewer(type = 'div', palette = "PuOr", 
+                     guide = guide_legend(title = 'dnesity bigger than 1')) + 
+  # 调暗背景便于观察
+  theme_dark() + 
+  # 设置标题
+  ggtitle('scatter plot of density bigger than 1 or not') + 
+  labs(x = "alcohol/fixed.acidity( % by volume / (g / dm^3) )", 
+       y = "residual sugar (g / dm^3)")
+```
+
+对于密度的区分做了更多绘制散点图的尝试，当横轴为酒精/固定酸，纵轴为残余糖时，得到的散点图可以相对更好地区分出密度是否大于1。
+
+接下来对于预测质量评分，尝试建立线性模型进行预测：
+
+```{r echo=FALSE}
+redwine$quality <- as.numeric(redwine$quality)+2
+m1 <- lm(formula = quality ~ alcohol, data = redwine)
+m2 <- update(m1, ~ . + volatile.acidity)
+m3 <- update(m2, ~ . + sulphates)
+m4 <- update(m3, ~ . + fixed.acidity)
+m5 <- update(m4, ~ . + citric.acid)
+m6 <- update(m5, ~ . + chlorides)
+m7 <- update(m6, ~ . + total.sulfur.dioxide)
+mtable(m1, m2, m3, m4, m5, m6, m7)
+```
+
+尝试建立线性模型对红酒的评分进行预测，发现使用7个变量也不能得到很好的决定系数，
+
+# 多变量分析
+
+###  探讨你在这部分探究中观察到的一些关系。通过观察感兴趣的特性，是否存在相互促进的特性？
+
+- 如果只绘制最高分和最低分，酒精浓度和醋酸含量的散点图中，可以通过一条直线将最高分和最低分区分开。
+
+- 如果散点图使用4个特征醋酸、酒精、硫酸盐和密度，则可以通过平行于x轴和y轴的两条线，将最高分和最低分几乎完全正确地区分开。
+
+- 创建了密度是否大于1的数据。从最后两幅图看，酒精和固定酸能区分部分红酒密度是否大于1，加入残余糖特征可以使密度是否大于1在散点图中区分度更好。
+
+### 这些特性之间是否存在有趣或惊人的联系呢？
+
+- 发现红酒密度不仅仅和酒精浓度关系较密切，而且和残余糖有比较大的关系，通过散点图可以看出，只要酒精浓度、固定酸加入残余糖就可以更好地区分密度是否大于1。
+
+- 发现分数的集中段5-6分所有特征都不能很好区分，但是如果只考察3分和8分，使用4个特征醋酸、酒精、硫酸盐和密度这四个特征可以几乎完全正确地将3分和8分的红酒区分开。
+
+### 选项：你是否创建过数据集的任何模型？讨论你模型的优缺点。
+
+尝试使用了线性模型来预测红酒的质量评分，发现并不能高准确率的预测红酒评分，估计可能使由于质量评分只有3-8分的6个离散值，而线性模型是预测连续数据的模型，如果使用分类模型可能能较好地预测质量评分。
+
+------
+
+# 定稿图与总结
+
+### 绘图一
+```{r echo=FALSE, Plot_One}
+ggplot(data = redwine, aes(x = quality)) + 
+  geom_histogram(binwidth = 1) + 
+  scale_x_continuous(breaks = seq(3, 8, 1)) + 
+  ggtitle("histogram of quality")
+```
+
+### 描述一
+
+质量评分由3-8分的6个离散值组成，大多数质量评分位于5-6分，然后向更低分和更高分的方向的红酒数量逐渐减少，大体上符合正态分布。
+
+### 绘图二
+```{r echo=FALSE}
+# 醋酸/酒精和质量评分的散点图
+ggplot(data = subset(redwine, quality_factor %in% c(3, 8)), 
+       aes(x = alcohol, y = volatile.acidity)) + 
+  geom_jitter(aes(color = quality_factor), alpha = 0.6) + 
+  # 颜色编码
+  scale_color_brewer(type = 'div', palette = "PuOr", 
+                     guide = guide_legend(title = 'quality')) + 
+  # 调暗背景便于观察
+  theme_dark() + 
+  labs(x = "alcohol (% by volume)", 
+       y = "volatile acidity (g / dm^3)") + 
+  ggtitle("scatter plot of alcohol and volatile acidity")
+```
+
+### 描述二
+
+从上述散点图看出，使用醋酸、酒精这两个个特征可以几乎完全正确地将3分和8分的红酒区分开。虽然前文分析中，再添加两个特征也可以更好地区分3分和8分的红酒，但是能使用两个特征完成的任务，就不要再添加新的特征进行运算。
+
+### 绘图三
+```{r echo=FALSE}
+# 加入参与糖特征观察密度是否大于1的散点图
+ggplot(data = redwine, 
+       aes(x = alcohol/fixed.acidity, y = residual.sugar)) + 
+  geom_point(aes(color = density.bigger.1)) + 
+  # 颜色编码
+  scale_color_brewer(type = 'div', palette = "PuOr", 
+                     guide = guide_legend(title = 'dnesity bigger than 1')) + 
+  # 调暗背景便于观察
+  theme_dark() + 
+  # 设置标题
+  ggtitle('scatter plot of density bigger than 1 or not') + 
+  labs(x = "alcohol/fixed.acidity( % by volume / (g / dm^3) )", 
+       y = "residual sugar (g / dm^3)")
+```
+
+### 描述三
+
+从上述散点图可以看出，酒精、固定酸和残余糖这三个特征可以获得密度是否大于1较好的区分度。
+
+------
+
+# 反思
+
+红酒数据集包含对1599个不同红酒的观察，每一个观察对象包含12个特征。本文的分析，主要基于这12个特征及基于它们新建的特征，尝试通过特征预测红酒的质量评分，及分析部分红酒密度大于1的主要因素。
+
+首先，我们理解了数据集的每个特征的实际意义，对每个特征的数据分布情况进行了可视化，通过直方图看出大多数特征都符合中间多两头少的正态分布特征，除了评分是5-8的整数的离散值，其他特征都是连续数值。通过直方图观察，发现了红酒的密度有大于1的情况，这不符合酒这一水和酒的混合物的常识，所以在接下来的探索中重点探索了密度大于1可能原因，并分析了质量评分与哪些因素有关。
+
+接下来的双变量分析，重点分析了质量评分和密度与哪些特征相关。我们发现质量评分与红酒中的酒精浓度存在一定的正相关关系，说明酒精浓度高的红酒更容易获得高评分，而醋酸与红酒质量评分负相关，可能偏酸的口感会拉低红酒的评分。而密度方面，密度和酒精浓度负相关，和固定酸含量正相关，而且密度大于1的红酒的固定酸浓度大体上分布在较高的区域，说明密度大于1可能是因为太大的固定酸含量使红酒密度上升。
+
+最后的多变量分析中，我们尝试使用多个变量绘制散点图的方式将不同评分的红酒在散点图中分开，但是5-6分的红酒过于集中，使用数据集中的特征没有明显将它们分开。而如果我们使用醋酸和酒精这两个特征，绘制的最高分和最低分的散点图，则可以通过一条直线将3分和8分的红酒区分开，再进一步尝试中，我们加入更大特征绘制散点图，我们使用4个特征醋酸、酒精、硫酸盐和密度，区分3分和8分的红酒并没有比仅仅醋酸和酒精表现出更好的效果。我们也尝试使用酒精、醋酸和其他特征建立线性模型预测红酒评分，但是建立的模型的决定系数都小于0.5，说明模型不够反映实际情况，或者可能是特征不够不能重复预测质量评分，这里我想如果有红酒的价格和体积数据可能会对预测质量评分有些帮助。而密度方面，双变量分析时发现酒精和固定酸能区分部分红酒密度是否大于1，这里加入了残余糖绘制的散点图看出，或许酒精、固定酸、残余糖这三个变量才能更好地区分红酒密度是否大于1。
+
+
+数据来源：
+
+  [1] P. Cortez, A. Cerdeira, F. Almeida et al. Modeling wine preferences by data mining from physicochemical properties. Decision Support Systems, Elsevier, 47(4):547-553. ISSN: 0167-9236.
